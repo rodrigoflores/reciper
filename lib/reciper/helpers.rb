@@ -30,7 +30,9 @@ module Reciper
 
     def run_rake_task(task)
       Dir.chdir(@ruby_app_path) do
-        response = `rake #{task}`
+        spawn("rake #{task}", :err=> "/dev/null", :out => "/dev/null")
+
+        Process.wait
       end
 
       $?.exitstatus == 0
