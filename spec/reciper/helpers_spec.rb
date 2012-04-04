@@ -53,4 +53,14 @@ describe Reciper::Helpers do
       FileUtils.rm("spec/fixtures/ruby_app/spec/failing_spec.rb")
     end
   end
+
+  describe ".run_rake_task" do
+    it "returns true when the rake task has been run ok" do
+      run_rake_task("puts_something").should be
+    end
+
+    it "returns false when the rake task hasn't been run ok" do
+      run_rake_task("idontexists").should_not be
+    end
+  end
 end

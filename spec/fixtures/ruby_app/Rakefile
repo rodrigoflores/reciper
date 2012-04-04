@@ -1,0 +1,5 @@
+task :default => [:puts_something]
+
+task :puts_something do
+  sh "echo 'hello'"
+end

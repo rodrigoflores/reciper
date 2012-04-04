@@ -16,21 +16,25 @@ module Reciper
     end
 
     def run_tests(options={})
-      current_dir = Dir.pwd
-      Dir.chdir(@ruby_app_path)
+      Dir.chdir(@ruby_app_path) do
+        response = `rspec spec`
 
-      response = `rspec spec`
+        if response =~ /([.FE]+)/
+          $1.split("").reject { |char| char == "." }.size
+        else
+          puts "Can't get any test output"
+          fail NoTestOutput
+        end
+      end
+    end
 
-      if response =~ /([.FE]+)/
-        failures = $1.split("").reject { |char| char == "." }.size
-      else
-        puts "Can't get any test output"
-        fail NoTestOutput
+    def run_rake_task(task)
+      Dir.chdir(@ruby_app_path) do
+        response = `rake #{task}`
       end
 
-      Dir.chdir current_dir
-
-      failures
+      $?.exitstatus == 0
     end
   end
+
 end
