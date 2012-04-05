@@ -160,6 +160,8 @@ EOF
       rollback
 
       File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "Not OK"
+
+      FileUtils.rm("spec/fixtures/ruby_app/an_added_file.rb")
     end
   end
 end
