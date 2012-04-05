@@ -65,9 +65,9 @@ module Reciper
     def rollback
       @operations.reverse.each do |operation|
         if operation[0] == :copy
-          FileUtils.rm(operation[1])
+          FileUtils.rm(@ruby_app_path + "/" + operation[1])
         elsif operation[0] == :copy_range
-          File.open(operation[1], "w") { |file| file.write(operation[2]) }
+          File.open(@ruby_app_path + "/" + operation[1], "w") { |file| file.write(operation[2]) }
         end
       end
     end

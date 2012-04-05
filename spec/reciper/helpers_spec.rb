@@ -6,7 +6,6 @@ describe Reciper::Helpers do
   before(:all) do
     @ruby_app_path = "spec/fixtures/ruby_app"
     @recipe_path = "spec/fixtures/recipe"
-
   end
 
   before(:each) do
@@ -131,6 +130,36 @@ EOF
 
     after do
       File.write("spec/fixtures/ruby_app/lib/my_class.rb", @expected_at_the_beginning.chomp)
+    end
+  end
+
+  describe ".rollback" do
+    it "removes the file when the operation is copy" do
+      File.open(@ruby_app_path + "/an_added_file.rb", "w") {
+        |f| f.write("OK")
+      }
+
+      File.exists?("spec/fixtures/ruby_app/an_added_file.rb").should be
+
+      @operations = [[:copy, "an_added_file.rb"]]
+
+      rollback
+
+      File.exists?("spec/fixtures/ruby_app/an_added_file.rb").should_not be
+    end
+
+    it "restores the old file when the operation is copy_range" do
+      File.open(@ruby_app_path + "/an_added_file.rb", "w") {
+        |f| f.write("OK")
+      }
+
+      File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "OK"
+
+      @operations = [[:copy_range, "an_added_file.rb", "Not OK"]]
+
+      rollback
+
+      File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "Not OK"
     end
   end
 end
