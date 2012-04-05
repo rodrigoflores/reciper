@@ -6,6 +6,11 @@ describe Reciper::Helpers do
   before(:all) do
     @ruby_app_path = "spec/fixtures/ruby_app"
     @recipe_path = "spec/fixtures/recipe"
+
+  end
+
+  before(:each) do
+    @operations = []
   end
 
   describe ".copy" do
@@ -38,6 +43,15 @@ describe Reciper::Helpers do
 
       FileUtils.rm_rf("spec/fixtures/ruby_app/my_awesome_dir")
     end
+
+    it "adds the operation to @operation array" do
+      copy_file("file.rb")
+
+      @operations.should include([:copy, "file.rb"])
+
+      FileUtils.rm("spec/fixtures/ruby_app/file.rb")
+    end
+
   end
 
   describe ".run_tests" do
@@ -61,6 +75,62 @@ describe Reciper::Helpers do
 
     it "returns false when the rake task hasn't been run ok" do
       run_rake_task("idontexists").should_not be
+    end
+  end
+
+  describe ".copy_line_range" do
+    it "copies the entire input file to the output line " do
+      @expected_at_the_beginning = <<-EOF
+class MyClass
+end
+EOF
+      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
+
+      expected_at_the_end = <<-EOF
+class MyClass
+def my_name
+  puts self.name
+end
+end
+EOF
+
+      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2)
+
+      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+    end
+
+    it "copies only specified lines" do
+      @expected_at_the_beginning = <<-EOF
+class MyClass
+end
+EOF
+
+      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
+
+      expected_at_the_end = <<-EOF
+class MyClass
+  puts self.name
+end
+EOF
+
+      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2, :from_lines => (2..2))
+
+      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+    end
+
+    it "adds an entry to operations" do
+      @expected_at_the_beginning = <<-EOF
+class MyClass
+end
+EOF
+
+      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2)
+
+      @operations.should include([:copy_range, "lib/my_class.rb", @expected_at_the_beginning.chomp])
+    end
+
+    after do
+      File.write("spec/fixtures/ruby_app/lib/my_class.rb", @expected_at_the_beginning.chomp)
     end
   end
 end
