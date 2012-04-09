@@ -32,7 +32,7 @@ module Reciper
 
     def run_rake_task(task)
       Dir.chdir(@ruby_app_path) do
-        spawn("bundle exec rake #{task}", :err=> "/dev/null", :out => "/dev/null")
+        spawn("bundle exec rake #{task}", :out => "/dev/null", :err => "/dev/null")
 
         Process.wait
       end

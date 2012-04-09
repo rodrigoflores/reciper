@@ -50,7 +50,6 @@ describe Reciper::Helpers do
 
       FileUtils.rm("spec/fixtures/ruby_app/file.rb")
     end
-
   end
 
   describe ".run_tests" do
