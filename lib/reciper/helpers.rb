@@ -19,7 +19,7 @@ module Reciper
 
     def run_tests(options={})
       Dir.chdir(@ruby_app_path) do
-        response = `rspec spec`
+        response = `bundle exec rspec spec`
 
         if response =~ /([.FE]+)/
           $1.split("").reject { |char| char == "." }.size
@@ -32,7 +32,7 @@ module Reciper
 
     def run_rake_task(task)
       Dir.chdir(@ruby_app_path) do
-        spawn("rake #{task}", :err=> "/dev/null", :out => "/dev/null")
+        spawn("bundle exec rake #{task}", :err=> "/dev/null", :out => "/dev/null")
 
         Process.wait
       end
