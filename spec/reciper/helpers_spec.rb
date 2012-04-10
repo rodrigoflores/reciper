@@ -132,6 +132,22 @@ EOF
     end
   end
 
+  describe ".run_command" do
+    it "runs a command on projects folder and returns true when successful" do
+      run_command("ls").should be
+    end
+
+    it "runs a command on projects folder and returns not true when failure" do
+      run_command("cp").should_not be
+    end
+
+    it "receives the rollback command together with the command and store it on @operations array" do
+      run_command("ls", "ls -a")
+
+      @operations.should include([:run_command, "ls -a"])
+    end
+  end
+
   describe ".rollback" do
     it "removes the file when the operation is copy" do
       File.open(@ruby_app_path + "/an_added_file.rb", "w") {
@@ -161,6 +177,15 @@ EOF
       File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "Not OK"
 
       FileUtils.rm("spec/fixtures/ruby_app/an_added_file.rb")
+    end
+
+    it "runs the rollback command when the operation is run_command and we have a rollback command" do
+      @operations = [[:run_command, "ls"]]
+
+      self.should_receive(:spawn).with("ls")
+      Process.stub!(:wait)
+
+      rollback
     end
   end
 end

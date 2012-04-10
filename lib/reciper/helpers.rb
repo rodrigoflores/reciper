@@ -61,14 +61,32 @@ module Reciper
       @operations << [:copy_range, to, original_output.join("\n")]
     end
 
-
     def rollback
       @operations.reverse.each do |operation|
         if operation[0] == :copy
           FileUtils.rm(@ruby_app_path + "/" + operation[1])
         elsif operation[0] == :copy_range
           File.open(@ruby_app_path + "/" + operation[1], "w") { |file| file.write(operation[2]) }
+        elsif operation[0] == :run_command
+          spawn(operation[1]) if operation[1]
+
+          Process.wait
         end
+      end
+    end
+
+    def run_command(command, rollback_command=nil)
+      Dir.chdir(@ruby_app_path) do
+        spawn("bundle exec #{command}", :out => "/dev/null", :err => "/dev/null")
+
+        Process.wait
+      end
+
+      if $?.exitstatus == 0
+        @operations << [:run_command, rollback_command || nil]
+        true
+      else
+        false
       end
     end
   end
