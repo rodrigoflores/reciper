@@ -21,7 +21,7 @@ module Reciper
       Dir.chdir(@ruby_app_path) do
         response = `bundle exec rspec spec`
 
-        if response =~ /([.FE]+)/
+        if response =~ /([.FE*]+)/
           $1.split("").reject { |char| char == "." }.size
         else
           puts "Can't get any test output"
