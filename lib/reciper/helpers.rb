@@ -4,6 +4,9 @@ module Reciper
   class NoTestOutput < RuntimeError
   end
 
+  class NoFileToBeOverriden < RuntimeError
+  end
+
   module Helpers
     def copy_file(filename, options={})
       destination_dir = @ruby_app_path + "/" + (options[:to] || "")
@@ -14,7 +17,13 @@ module Reciper
 
       FileUtils.cp(@recipe_path + "/" + filename, destination_dir)
 
-      @operations << [:copy, (options[:to] || "") + filename]
+      new_filename = options[:as] || filename
+
+      if(options[:as])
+        FileUtils.mv(destination_dir + "/" + filename, destination_dir + "/" + new_filename)
+      end
+
+      @operations << [:copy, (options[:to] || "") + new_filename]
     end
 
     def run_tests(options={})
@@ -71,6 +80,8 @@ module Reciper
           spawn(operation[1]) if operation[1]
 
           Process.wait
+        elsif operation[0] == :override_file
+          FileUtils.cp(operation[1], @ruby_app_path + "/" + operation[2])
         end
       end
     end
@@ -88,6 +99,22 @@ module Reciper
       else
         false
       end
+    end
+
+    def override_file(file, file_to_be_overriden)
+      Dir.chdir(@ruby_app_path) do
+        fail NoFileToBeOverriden unless File.exists?(file_to_be_overriden)
+
+        FileUtils.mkdir_p("/tmp/reciper")
+        filename = File.basename(file_to_be_overriden)
+        tmp_file = "/tmp/reciper/#{filename}"
+
+        FileUtils.cp(file_to_be_overriden, tmp_file)
+
+        @operations << [:override_file, tmp_file, file_to_be_overriden]
+      end
+
+      FileUtils.cp(@recipe_path + "/" + file, @ruby_app_path + "/" + file_to_be_overriden)
     end
   end
 end

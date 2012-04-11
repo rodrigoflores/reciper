@@ -33,6 +33,16 @@ describe Reciper::Helpers do
       FileUtils.rm("spec/fixtures/ruby_app/lib/file.rb")
     end
 
+    it "copies the file with the name as in defined in as" do
+      File.exists?("spec/fixtures/ruby_app/file.rb").should_not be
+
+      copy_file("file.rb", :as => "another_file.rb")
+
+      File.exists?("spec/fixtures/ruby_app/another_file.rb").should be
+
+      FileUtils.rm("spec/fixtures/ruby_app/another_file.rb")
+    end
+
     it "if the dir doesn't exists, create it" do
       File.exists?("spec/fixtures/ruby_app/lib/file.rb").should_not be
 
@@ -186,6 +196,47 @@ EOF
       Process.stub!(:wait)
 
       rollback
+    end
+
+    it "runs the rollback command when the operation is override_file" do
+      begin
+        FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
+        FileUtils.rm("spec/fixtures/ruby_app/README")
+
+        File.exists?("spec/fixtures/ruby_app/README").should_not be
+
+        @operations = [[:override_file, "/tmp/README", "README"]]
+
+        rollback
+
+        File.exists?("spec/fixtures/ruby_app/README").should be
+      ensure
+        FileUtils.cp("/tmp/README", "spec/fixtures/ruby_app/README") unless File.exists?("spec/fixtures/ruby_app/README")
+      end
+    end
+  end
+
+  describe ".override_file" do
+    it "overrides the file with another file" do
+      FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
+
+      File.read("spec/fixtures/ruby_app/README").should == "some content"
+
+      override_file("README", "README")
+
+      File.read("spec/fixtures/ruby_app/README").should == ""
+
+      FileUtils.mv("/tmp/README", "spec/fixtures/ruby_app/README")
+    end
+
+    it "adds the operation to operations array" do
+      FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
+
+      override_file("README", "README")
+
+      @operations.should include([:override_file, "/tmp/reciper/README", "README"])
+
+      FileUtils.mv("/tmp/README", "spec/fixtures/ruby_app/README")
     end
   end
 end
