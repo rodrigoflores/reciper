@@ -126,6 +126,38 @@ EOF
       File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
     end
 
+    context "suffix copy" do
+      it "works with only the suffix of the file when there is only one file" do
+        @expected_at_the_beginning = <<-EOF
+class MyClass
+end
+EOF
+
+        File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
+
+        expected_at_the_end = <<-EOF
+class MyClass
+  puts self.name
+end
+EOF
+
+        copy_line_range("my_name.rb", "lib/*_class.rb", :to_line => 2, :from_lines => (2..2))
+
+        File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+      end
+
+      it "doesn't works with only the suffix of the file when there is more than one file" do
+        @expected_at_the_beginning = <<-EOF
+class MyClass
+end
+EOF
+
+        lambda {
+          copy_line_range("my_name.rb", "*", :to_line => 2, :from_lines => (2..2))
+        }.should raise_error Reciper::NoFileOrMultipleFilesFound
+      end
+    end
+
     it "adds an entry to operations" do
       @expected_at_the_beginning = <<-EOF
 class MyClass

@@ -7,6 +7,9 @@ module Reciper
   class NoFileToBeOverriden < RuntimeError
   end
 
+  class NoFileOrMultipleFilesFound < RuntimeError
+  end
+
   module Helpers
     def copy_file(filename, options={})
       destination_dir = @ruby_app_path + "/" + (options[:to] || "")
@@ -57,9 +60,20 @@ module Reciper
       end
 
       from_file_lines = File.open(@recipe_path + "/" + from, "r").readlines
-      output_lines = File.read(@ruby_app_path + "/" + to).split("\n")
+
+      to_files = Dir[@ruby_app_path + "/" + to]
+      to_file = ""
+
+      if to_files.size == 1
+        to_file = to_files.first
+      else
+        raise NoFileOrMultipleFilesFound, "No file or multiple files found"
+      end
+
+      output_lines = File.read(to_file).split("\n")
       original_output = output_lines.dup
-      to_file_output = File.open(@ruby_app_path + "/" + to, "w")
+
+      to_file_output = File.open(to_file, "w")
 
       to_output = output_lines.insert(options[:to_line] - 1, from_file_lines.map(&:chomp).slice(from_lines)).flatten!.join("\n")
 
@@ -67,7 +81,7 @@ module Reciper
 
       to_file_output.close
 
-      @operations << [:copy_range, to, original_output.join("\n")]
+      @operations << [:copy_range, to_file[(@ruby_app_path.size+1)..-1], original_output.join("\n")]
     end
 
     def rollback
