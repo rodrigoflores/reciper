@@ -14,51 +14,36 @@ describe Reciper::Helpers do
 
   describe ".copy" do
     it "copies the file from the recipe path to the ruby app root path " do
-      File.exists?("spec/fixtures/ruby_app/file.rb").should_not be
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "spec/fixtures/ruby_app/file.rb")
 
       copy_file("file.rb")
-
-      File.exists?("spec/fixtures/ruby_app/file.rb").should be
-
-      FileUtils.rm("spec/fixtures/ruby_app/file.rb")
     end
 
     it "copies the file from the recipe path to the ruby app" do
-      File.exists?("spec/fixtures/ruby_app/lib/file.rb").should_not be
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "spec/fixtures/ruby_app/lib/file.rb")
 
       copy_file("file.rb", :to => "lib")
-
-      File.exists?("spec/fixtures/ruby_app/lib/file.rb").should be
-
-      FileUtils.rm("spec/fixtures/ruby_app/lib/file.rb")
     end
 
     it "copies the file with the name as in defined in as" do
-      File.exists?("spec/fixtures/ruby_app/file.rb").should_not be
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "spec/fixtures/ruby_app/another_file.rb")
 
       copy_file("file.rb", :as => "another_file.rb")
-
-      File.exists?("spec/fixtures/ruby_app/another_file.rb").should be
-
-      FileUtils.rm("spec/fixtures/ruby_app/another_file.rb")
     end
 
     it "if the dir doesn't exists, create it" do
-      File.exists?("spec/fixtures/ruby_app/lib/file.rb").should_not be
+      directory = @ruby_app_path + "/my_awesome_dir"
+      File.should_receive(:directory?).with("spec/fixtures/ruby_app/my_awesome_dir").and_return(false)
+      FileUtils.should_receive(:mkdir_p).with("spec/fixtures/ruby_app/my_awesome_dir")
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "spec/fixtures/ruby_app/my_awesome_dir/file.rb")
 
       copy_file("file.rb", :to => "my_awesome_dir")
-
-      File.exists?("spec/fixtures/ruby_app/my_awesome_dir/file.rb").should be
-
-      FileUtils.rm_rf("spec/fixtures/ruby_app/my_awesome_dir")
     end
 
     it "adds the operation to @operation array" do
       copy_file("file.rb")
 
-      @operations.should include([:copy, "file.rb"])
-
-      FileUtils.rm("spec/fixtures/ruby_app/file.rb")
+      @operations.should include([:copy, { :destination => "file.rb" }])
     end
   end
 

@@ -12,29 +12,30 @@ module Reciper
 
   module Helpers
     def copy_file(filename, options={})
-      destination_dir = @ruby_app_path + "/" + (options[:to] || "")
+      destination_file_name = options[:as] || filename
+      destination_dir = options[:to] || ""
 
-      unless File.directory?(destination_dir)
-        FileUtils.mkdir_p(destination_dir)
+      if destination_dir == ""
+        destination = destination_file_name
+      else
+        destination = File.join(destination_dir, destination_file_name)
       end
 
-      FileUtils.cp(@recipe_path + "/" + filename, destination_dir)
+      global_destination = File.join(@ruby_app_path, destination)
 
-      new_filename = options[:as] || filename
+      create_directory_if_not_exists(File.join(@ruby_app_path, destination_dir))
 
-      if(options[:as])
-        FileUtils.mv(destination_dir + "/" + filename, destination_dir + "/" + new_filename)
-      end
+      FileUtils.cp(File.join(@recipe_path, filename), global_destination)
 
-      @operations << [:copy, (options[:to] || "") + new_filename]
+      @operations << [:copy, { :destination => destination }]
     end
 
     def run_tests(options={})
       Dir.chdir(@ruby_app_path) do
         response = `bundle exec rspec spec`
 
-        if response =~ /([.FE*]+)/
-          $1.split("").reject { |char| char == "." }.size
+        if response =~ /([\.FE*]+)/
+          $1.split("").reject { |char| (char == "." || char == "*") }.size
         else
           puts "Can't get any test output"
           fail NoTestOutput
@@ -129,6 +130,12 @@ module Reciper
       end
 
       FileUtils.cp(@recipe_path + "/" + file, @ruby_app_path + "/" + file_to_be_overriden)
+    end
+
+    private
+
+    def create_directory_if_not_exists(directory)
+      FileUtils.mkdir_p(directory) unless File.directory?(directory)
     end
   end
 end
