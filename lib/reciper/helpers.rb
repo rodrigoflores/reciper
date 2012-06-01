@@ -26,15 +26,19 @@ module Reciper
     end
 
     def run_tests(options={})
-      Dir.chdir(@ruby_app_path) do
-        response = `bundle exec rspec spec`
+      response = ""
 
-        if response =~ /([\.FE*]+)/
-          $1.split("").reject { |char| (char == "." || char == "*") }.size
-        else
-          puts "Can't get any test output"
-          fail NoTestOutput
+      Dir.chdir(@ruby_app_path) do
+        IO.popen("bundle exec rspec spec") do |io|
+          response = io.read
         end
+      end
+
+      if response =~ /([\.FE*]+)/
+        $1.split("").reject { |char| (char == "." || char == "*") }.size
+      else
+        puts "Can't get any test output"
+        fail NoTestOutput
       end
     end
 

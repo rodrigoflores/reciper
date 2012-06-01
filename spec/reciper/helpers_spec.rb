@@ -41,6 +41,8 @@ describe Reciper::Helpers do
     end
 
     it "adds the operation to @operation array" do
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "spec/fixtures/ruby_app/file.rb")
+
       copy_file("file.rb")
 
       @operations.should include([:copy, { :destination => "/file.rb" }])
@@ -49,15 +51,35 @@ describe Reciper::Helpers do
 
   describe ".run_tests" do
     it "returns 0 if all tests pass" do
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      test_output = <<-EOF
+      ....
+
+      Finished in 11.29 seconds
+      23 examples, 0 failures
+      EOF
+
+      io = double(:io, :read => test_output)
+      IO.should_receive(:popen).with("bundle exec rspec spec").and_yield(io)
+
       run_tests.should == 0
     end
 
     it "returns 1 if there is only one failure" do
-      copy_file("failing_spec.rb", :to => "spec")
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
 
-      run_tests.should == 1
+      test_output = <<-EOF
+      FE..
 
-      FileUtils.rm("spec/fixtures/ruby_app/spec/failing_spec.rb")
+      Finished in 11.29 seconds
+      4 examples, 0 failures
+      EOF
+
+      io = double(:io, :read => test_output)
+      IO.should_receive(:popen).with("bundle exec rspec spec").and_yield(io)
+
+      run_tests.should == 2
     end
   end
 
