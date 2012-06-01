@@ -43,7 +43,7 @@ describe Reciper::Helpers do
     it "adds the operation to @operation array" do
       copy_file("file.rb")
 
-      @operations.should include([:copy, { :destination => "file.rb" }])
+      @operations.should include([:copy, { :destination => "/file.rb" }])
     end
   end
 

@@ -15,12 +15,7 @@ module Reciper
       destination_file_name = options[:as] || filename
       destination_dir = options[:to] || ""
 
-      if destination_dir == ""
-        destination = destination_file_name
-      else
-        destination = File.join(destination_dir, destination_file_name)
-      end
-
+      destination = File.join(destination_dir , destination_file_name)
       global_destination = File.join(@ruby_app_path, destination)
 
       create_directory_if_not_exists(File.join(@ruby_app_path, destination_dir))
