@@ -37,13 +37,7 @@ module Reciper
     end
 
     def run_rake_task(task)
-      Dir.chdir(@ruby_app_path) do
-        spawn("bundle exec rake #{task}", :out => "/dev/null", :err => "/dev/null")
-
-        Process.wait
-      end
-
-      $?.exitstatus == 0
+      run_command("bundle exec rake #{task}")
     end
 
     def copy_line_range(from, to, options={})
@@ -98,7 +92,7 @@ module Reciper
       @operations << [:run_command, { :rollback_command => rollback_command }]
 
       {
-        :succesful => successful,
+        :successful => successful,
         :response => response
       }
     end

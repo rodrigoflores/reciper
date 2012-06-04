@@ -84,12 +84,46 @@ describe Reciper::Helpers do
   end
 
   describe ".run_rake_task" do
-    it "returns true when the rake task has been run ok" do
-      run_rake_task("puts_something").should be
+    it "returns a hash with successful as true when the rake task has been run successfully" do
+      output = <<EOF
+a
+b
+EOF
+
+      io = double(:io)
+      io.should_receive(:read) do
+        "a\nb\n"
+      end
+
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      IO.should_receive(:popen).
+        with("bundle exec rake puts_something").and_yield(io)
+      $?.should_receive(:exitstatus).and_return(0)
+
+      run_rake_task("puts_something").should == {
+        :response => "a\nb\n",
+        :successful => true
+      }
     end
 
-    it "returns false when the rake task hasn't been run ok" do
-      run_rake_task("idontexists").should_not be
+    it "returns a hash with successful as false when the rake task hasn't been run successfully" do
+
+      output = ""
+
+      io = double(:io)
+      io.stub!(:read).and_return("")
+
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      IO.should_receive(:popen).
+        with("bundle exec rake puts_something").and_yield(io)
+      $?.should_receive(:exitstatus).and_return(1)
+
+      run_rake_task("puts_something").should == {
+        :response => "",
+        :successful => false
+      }
     end
   end
 
@@ -243,7 +277,7 @@ EOF
 
       run_command("ls").should == {
         :response => "a\nb\n",
-        :succesful => true
+        :successful => true
       }
     end
 
@@ -265,7 +299,7 @@ EOF
 
       run_command("ls").should == {
         :response => "a\nb\n",
-        :succesful => false
+        :successful => false
       }
     end
 
