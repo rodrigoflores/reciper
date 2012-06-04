@@ -85,30 +85,25 @@ describe Reciper::Helpers do
 
   describe ".run_rake_task" do
     it "returns a hash with successful as true when the rake task has been run successfully" do
-      output = <<EOF
-a
-b
-EOF
-
-      io = double(:io)
-      io.should_receive(:read) do
-        "a\nb\n"
-      end
+      output = ""
 
       Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
 
+      io = double(:io)
+      io.stub!(:read).and_return("")
+
       IO.should_receive(:popen).
         with("bundle exec rake puts_something").and_yield(io)
+
       $?.should_receive(:exitstatus).and_return(0)
 
       run_rake_task("puts_something").should == {
-        :response => "a\nb\n",
+        :response => "",
         :successful => true
       }
     end
 
     it "returns a hash with successful as false when the rake task hasn't been run successfully" do
-
       output = ""
 
       io = double(:io)
