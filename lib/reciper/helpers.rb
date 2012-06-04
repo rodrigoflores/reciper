@@ -26,15 +26,9 @@ module Reciper
     end
 
     def run_tests(options={})
-      response = ""
+      result = run_command("bundle exec rspec spec")
 
-      Dir.chdir(@ruby_app_path) do
-        IO.popen("bundle exec rspec spec") do |io|
-          response = io.read
-        end
-      end
-
-      if response =~ /([\.FE*]+)/
+      if result[:response] =~ /([\.FE*]+)/
         $1.split("").reject { |char| (char == "." || char == "*") }.size
       else
         puts "Can't get any test output"
@@ -91,9 +85,11 @@ module Reciper
         elsif operation[0] == :copy_range
           File.open(@ruby_app_path + "/" + operation[1], "w") { |file| file.write(operation[2]) }
         elsif operation[0] == :run_command
-          spawn(operation[1]) if operation[1]
+          Dir.chdir(@ruby_app_path) do
+            spawn(operation[1]) if operation[1]
 
-          Process.wait
+            Process.wait
+          end
         elsif operation[0] == :override_file
           FileUtils.cp(operation[1], @ruby_app_path + "/" + operation[2])
         end
@@ -101,18 +97,21 @@ module Reciper
     end
 
     def run_command(command, rollback_command=nil)
+      response = ""
+      successful = ""
+
       Dir.chdir(@ruby_app_path) do
-        spawn("bundle exec #{command}", :out => "/dev/null", :err => "/dev/null")
+        IO.popen(command) do |io|
+          response = io.read
+        end
 
-        Process.wait
+        successful = ($?.exitstatus == 0)
       end
 
-      if $?.exitstatus == 0
-        @operations << [:run_command, rollback_command || nil]
-        true
-      else
-        false
-      end
+      {
+        :succesful => successful,
+        :response => response
+      }
     end
 
     def override_file(file, file_to_be_overriden)

@@ -73,7 +73,7 @@ describe Reciper::Helpers do
       FE..
 
       Finished in 11.29 seconds
-      4 examples, 0 failures
+      4 examples, 2 failures
       EOF
 
       io = double(:io, :read => test_output)
@@ -182,15 +182,52 @@ EOF
   end
 
   describe ".run_command" do
-    it "runs a command on projects folder and returns true when successful" do
-      run_command("ls").should be
+    it "runs a command on projects folder and returns the command hash with the response and true when successful" do
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      output = <<EOF
+a
+b
+EOF
+
+      io = double(:io)
+      io.should_receive(:read) do
+        "a\nb\n"
+      end
+
+      IO.should_receive(:popen).with("ls").and_yield(io)
+      $?.should_receive(:exitstatus).and_return(0)
+
+      run_command("ls").should == {
+        :response => "a\nb\n",
+        :succesful => true
+      }
     end
 
-    it "runs a command on projects folder and returns not true when failure" do
-      run_command("cp").should_not be
+    it "runs a command on projects folder and returns the command hash with the response and false when not successful" do
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      output = <<EOF
+a
+b
+EOF
+
+      io = double(:io)
+      io.should_receive(:read) do
+        "a\nb\n"
+      end
+
+      IO.should_receive(:popen).with("ls").and_yield(io)
+      $?.should_receive(:exitstatus).and_return(1)
+
+      run_command("ls").should == {
+        :response => "a\nb\n",
+        :succesful => false
+      }
     end
 
     it "receives the rollback command together with the command and store it on @operations array" do
+      pending
       run_command("ls", "ls -a")
 
       @operations.should include([:run_command, "ls -a"])
