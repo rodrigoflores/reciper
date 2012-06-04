@@ -47,35 +47,22 @@ module Reciper
     end
 
     def copy_line_range(from, to, options={})
-      if options[:from_lines]
-        from_lines = Range.new(options[:from_lines].first - 1, options[:from_lines].last - 1)
-      else
-        from_lines = (0..-1)
+      original_file = filename_from_suffix(to)
+
+      original_content = File.read(original_file)
+      original = original_content.split("\n")
+
+      new_content = File.read(File.join(@recipe_path, from)).split("\n")
+
+      range = options[:lines] || (0..-1)
+
+      original.insert(options[:to_line], new_content[range])
+
+      File.open(original_file, "w") do |file|
+        file.write(original.flatten.join("\n"))
       end
 
-      from_file_lines = File.open(@recipe_path + "/" + from, "r").readlines
-
-      to_files = Dir[@ruby_app_path + "/" + to]
-      to_file = ""
-
-      if to_files.size == 1
-        to_file = to_files.first
-      else
-        raise NoFileOrMultipleFilesFound, "No file or multiple files found"
-      end
-
-      output_lines = File.read(to_file).split("\n")
-      original_output = output_lines.dup
-
-      to_file_output = File.open(to_file, "w")
-
-      to_output = output_lines.insert(options[:to_line] - 1, from_file_lines.map(&:chomp).slice(from_lines)).flatten!.join("\n")
-
-      to_file_output.write(to_output)
-
-      to_file_output.close
-
-      @operations << [:copy_range, to_file[(@ruby_app_path.size+1)..-1], original_output.join("\n")]
+      @operations << [:copy_line_range, { :original_content => original_content, :original_file => original_file }]
     end
 
     def rollback
@@ -133,6 +120,12 @@ module Reciper
     end
 
     private
+
+    def filename_from_suffix(suffix)
+      files = Dir.glob(File.join(@ruby_app_path, suffix))
+      fail NoFileOrMultipleFilesFound if files.size != 1
+      files.first
+    end
 
     def create_directory_if_not_exists(directory)
       FileUtils.mkdir_p(directory) unless File.directory?(directory)

@@ -94,90 +94,133 @@ describe Reciper::Helpers do
   end
 
   describe ".copy_line_range" do
-    it "copies the entire input file to the output line " do
-      @expected_at_the_beginning = <<-EOF
-class MyClass
-end
-EOF
-      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
-
-      expected_at_the_end = <<-EOF
-class MyClass
-def my_name
-  puts self.name
-end
-end
+    it "copies the entire input file to the output line on a specified line" do
+      readme = <<-EOF
+d
+e
 EOF
 
-      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2)
+      original = <<-EOF
+a
+b
+c
+f
+EOF
 
-      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+      Dir.should_receive(:glob).with("spec/fixtures/ruby_app/README.md").
+        and_return(["spec/fixtures/ruby_app/README.md"])
+
+      File.should_receive(:read).with("spec/fixtures/recipe/README").
+        and_return(readme)
+
+      File.should_receive(:read).with("spec/fixtures/ruby_app/README.md").
+        and_return(original)
+
+      file = double(:file)
+      file.should_receive(:write).with("a\nb\nc\nd\ne\nf")
+      File.should_receive(:open).with("spec/fixtures/ruby_app/README.md", "w").and_yield(file)
+
+      copy_line_range("README", "README.md", :to_line => 3)
     end
 
     it "copies only specified lines" do
-      @expected_at_the_beginning = <<-EOF
-class MyClass
-end
+      readme = <<-EOF
+a
+d
+e
+f
+g
 EOF
 
-      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
-
-      expected_at_the_end = <<-EOF
-class MyClass
-  puts self.name
-end
+      original = <<-EOF
+a
+b
+c
+f
 EOF
 
-      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2, :from_lines => (2..2))
+      Dir.should_receive(:glob).with("spec/fixtures/ruby_app/README.md").
+        and_return(["spec/fixtures/ruby_app/README.md"])
 
-      File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+      File.should_receive(:read).with("spec/fixtures/recipe/README").
+        and_return(readme)
+
+      File.should_receive(:read).with("spec/fixtures/ruby_app/README.md").
+        and_return(original)
+
+      file = double(:file)
+      file.should_receive(:write).with("a\nb\nc\nd\ne\nf")
+      File.should_receive(:open).with("spec/fixtures/ruby_app/README.md", "w").and_yield(file)
+
+      copy_line_range("README", "README.md", :to_line => 3, :lines => (1..2))
+    end
+
+    it "adds an entry to operations" do
+      readme = <<-EOF
+a
+d
+e
+f
+g
+EOF
+
+      original = <<-EOF
+a
+b
+c
+f
+EOF
+
+      Dir.stub!(:glob).with("spec/fixtures/ruby_app/README.md").
+        and_return(["spec/fixtures/ruby_app/README.md"])
+
+      File.stub!(:read).with("spec/fixtures/recipe/README").
+        and_return(readme)
+
+      File.stub!(:read).with("spec/fixtures/ruby_app/README.md").
+        and_return(original)
+
+      file = double(:file)
+      file.stub!(:write).with("a\nb\nc\nd\ne\nf")
+      File.stub!(:open).with("spec/fixtures/ruby_app/README.md", "w").and_yield(file)
+
+      copy_line_range("README", "README.md", :to_line => 3, :lines => (1..2))
+
+      @operations.should include([:copy_line_range, { :original_content => original, :original_file => "spec/fixtures/ruby_app/README.md"}])
     end
 
     context "suffix copy" do
       it "works with only the suffix of the file when there is only one file" do
-        @expected_at_the_beginning = <<-EOF
-class MyClass
-end
-EOF
+        readme = ""
+        original = ""
 
-        File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == @expected_at_the_beginning.chomp
+        Dir.should_receive(:glob).with("spec/fixtures/ruby_app/*.md").
+          and_return(["spec/fixtures/ruby_app/README.md"])
 
-        expected_at_the_end = <<-EOF
-class MyClass
-  puts self.name
-end
-EOF
+        File.stub!(:read).with("spec/fixtures/recipe/README").
+          and_return(readme)
 
-        copy_line_range("my_name.rb", "lib/*_class.rb", :to_line => 2, :from_lines => (2..2))
+        File.should_receive(:read).with("spec/fixtures/ruby_app/README.md").
+          and_return(original)
 
-        File.read("spec/fixtures/ruby_app/lib/my_class.rb").should == expected_at_the_end.chomp
+        file = double(:file)
+        file.stub!(:write)
+        File.stub!(:open).with("spec/fixtures/ruby_app/README.md", "w").and_yield(file)
+
+        copy_line_range("README", "*.md", :to_line => 0)
       end
 
-      it "doesn't works with only the suffix of the file when there is more than one file" do
-        @expected_at_the_beginning = <<-EOF
-class MyClass
-end
-EOF
+      it "raises an exception when given only the suffix of the file when there is more than one file" do
+        readme = ""
+        original = ""
+
+        Dir.should_receive(:glob).with("spec/fixtures/ruby_app/*.md").
+          and_return(["spec/fixtures/ruby_app/README.md", "spec/fixtures/ruby_app/README2.md"])
 
         lambda {
-          copy_line_range("my_name.rb", "*", :to_line => 2, :from_lines => (2..2))
-        }.should raise_error Reciper::NoFileOrMultipleFilesFound
+          copy_line_range("README", "*.md", :to_line => 0)
+        }.should raise_error(Reciper::NoFileOrMultipleFilesFound)
       end
-    end
-
-    it "adds an entry to operations" do
-      @expected_at_the_beginning = <<-EOF
-class MyClass
-end
-EOF
-
-      copy_line_range("my_name.rb", "lib/my_class.rb", :to_line => 2)
-
-      @operations.should include([:copy_range, "lib/my_class.rb", @expected_at_the_beginning.chomp])
-    end
-
-    after do
-      File.write("spec/fixtures/ruby_app/lib/my_class.rb", @expected_at_the_beginning.chomp)
     end
   end
 
