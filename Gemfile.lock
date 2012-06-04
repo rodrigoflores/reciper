@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    reciper (0.0.4)
+    reciper (0.1.0)
 
 GEM
   remote: https://rubygems.org/
