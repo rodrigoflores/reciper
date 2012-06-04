@@ -42,7 +42,8 @@ module Reciper
     #
     # Examples
     #
-    #   run_tests()
+    #  run_tests()
+    #  # => 2
     #
     # Returns the number of failures
     def run_tests
@@ -56,6 +57,18 @@ module Reciper
       end
     end
 
+    # Run a rake task on the ruby app
+    #
+    # task - the desired task
+    #
+    # Examples
+    #
+    #  rake_task("db:migrate")
+    #  # => { :successful => true, :response => ""}
+    #  rake_task("db:migrate")
+    #  # => { :successful => false, :response => "Couldn't find the specified DB"}
+    #
+    # Returns a command execution hash
     def run_rake_task(task)
       run_command("bundle exec rake #{task}")
     end
