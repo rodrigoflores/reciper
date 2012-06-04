@@ -11,6 +11,19 @@ module Reciper
   end
 
   module Helpers
+    # Copies the file from recipe to ruby_app. It adds an entry to the rollback
+    #
+    # filename - The file to be copied relative to the recipe_path
+    # options - The hash options to configure the copy (default: {}):
+    #         :as - The copy name (default: the file name).
+    #         :to - The destination dir relative to the ruby_app_path. If the directory doesn't exists, it will be created (default: ruby_app_path root path).
+    #
+    # Examples
+    #
+    #   copy_file("a.rb")
+    #   copy_file("a.rb", :to => "app/models", :as => "person.rb")
+    #
+    # Returns nothing.
     def copy_file(filename, options={})
       destination_file_name = options[:as] || filename
       destination_dir = options[:to] || ""
