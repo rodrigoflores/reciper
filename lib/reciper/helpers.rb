@@ -38,7 +38,14 @@ module Reciper
       @operations << [:copy_file, { :destination => destination }]
     end
 
-    def run_tests(options={})
+    # Run the tests on the ruby app
+    #
+    # Examples
+    #
+    #   run_tests()
+    #
+    # Returns the number of failures
+    def run_tests
       result = run_command("bundle exec rspec spec")
 
       if result[:response] =~ /([\.FE*]+)/
