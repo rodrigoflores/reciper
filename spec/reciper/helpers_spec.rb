@@ -227,10 +227,51 @@ EOF
     end
 
     it "receives the rollback command together with the command and store it on @operations array" do
-      pending
       run_command("ls", "ls -a")
 
-      @operations.should include([:run_command, "ls -a"])
+      @operations.should include([:run_command, { :rollback_command => "ls -a" }])
+    end
+
+    it "doesn't require the rollback command to be informed" do
+      run_command("ls")
+
+      @operations.should include([:run_command, { :rollback_command => nil}])
+    end
+  end
+
+  describe ".override_file" do
+    it "overrides the file with another file" do
+      Dir.should_receive(:chdir).with(@ruby_app_path).and_yield
+      File.should_receive(:exists?).with("README").and_return(true)
+      FileUtils.should_receive(:mkdir_p).with("/tmp/reciper")
+
+      FileUtils.should_receive(:cp).with("README", "/tmp/reciper/README")
+      FileUtils.should_receive(:cp).with("spec/fixtures/recipe/README",
+       "spec/fixtures/ruby_app/README")
+
+      override_file("README", "README")
+    end
+
+    it "raises an error when file doesn't exists" do
+      Dir.stub!(:chdir).with(@ruby_app_path).and_yield
+      File.should_receive(:exists?).with("README").and_return(false)
+
+      lambda {
+        override_file("README", "README")
+      }.should raise_error(Reciper::NoFileToBeOverriden)
+    end
+
+    it "adds the operation to operations array" do
+      Dir.stub!(:chdir).with(@ruby_app_path).and_yield
+      File.stub!(:exists?).with("README").and_return(true)
+      FileUtils.stub!(:mkdir_p).with("/tmp/reciper")
+
+      FileUtils.stub!(:cp).with("README", "/tmp/reciper/README")
+      FileUtils.stub!(:cp).with("spec/fixtures/recipe/README",
+       "spec/fixtures/ruby_app/README")
+
+      override_file("README", "README")
+      @operations.should include([:override_file, { :tmp_file => "/tmp/reciper/README", :overriden_file => "README"}])
     end
   end
 
@@ -289,30 +330,6 @@ EOF
       ensure
         FileUtils.cp("/tmp/README", "spec/fixtures/ruby_app/README") unless File.exists?("spec/fixtures/ruby_app/README")
       end
-    end
-  end
-
-  describe ".override_file" do
-    it "overrides the file with another file" do
-      FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
-
-      File.read("spec/fixtures/ruby_app/README").should == "some content"
-
-      override_file("README", "README")
-
-      File.read("spec/fixtures/ruby_app/README").should == ""
-
-      FileUtils.mv("/tmp/README", "spec/fixtures/ruby_app/README")
-    end
-
-    it "adds the operation to operations array" do
-      FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
-
-      override_file("README", "README")
-
-      @operations.should include([:override_file, "/tmp/reciper/README", "README"])
-
-      FileUtils.mv("/tmp/README", "spec/fixtures/ruby_app/README")
     end
   end
 end

@@ -108,6 +108,8 @@ module Reciper
         successful = ($?.exitstatus == 0)
       end
 
+      @operations << [:run_command, { :rollback_command => rollback_command }]
+
       {
         :succesful => successful,
         :response => response
@@ -124,10 +126,10 @@ module Reciper
 
         FileUtils.cp(file_to_be_overriden, tmp_file)
 
-        @operations << [:override_file, tmp_file, file_to_be_overriden]
+        @operations << [:override_file, { :tmp_file => tmp_file, :overriden_file => file_to_be_overriden }]
       end
 
-      FileUtils.cp(@recipe_path + "/" + file, @ruby_app_path + "/" + file_to_be_overriden)
+      FileUtils.cp(File.join(@recipe_path,file), File.join(@ruby_app_path, file_to_be_overriden))
     end
 
     private
