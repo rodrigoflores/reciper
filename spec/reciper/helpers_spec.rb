@@ -45,7 +45,7 @@ describe Reciper::Helpers do
 
       copy_file("file.rb")
 
-      @operations.should include([:copy, { :destination => "/file.rb" }])
+      @operations.should include([:copy_file, { :destination => "/file.rb" }])
     end
   end
 
@@ -353,60 +353,50 @@ EOF
   end
 
   describe ".rollback" do
-    it "removes the file when the operation is copy" do
-      File.open(@ruby_app_path + "/an_added_file.rb", "w") {
-        |f| f.write("OK")
-      }
+    it "removes the file when the operation is copy_file" do
+      @operations = [[:copy_file, { :destination => "README" }]]
 
-      File.exists?("spec/fixtures/ruby_app/an_added_file.rb").should be
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
 
-      @operations = [[:copy, "an_added_file.rb"]]
+      FileUtils.should_receive(:rm).with("README")
 
       rollback
-
-      File.exists?("spec/fixtures/ruby_app/an_added_file.rb").should_not be
     end
 
     it "restores the old file when the operation is copy_range" do
-      File.open(@ruby_app_path + "/an_added_file.rb", "w") {
-        |f| f.write("OK")
-      }
+      @operations = [[:copy_range, { :original_content => "Not OK", :original_file => "an_added_file.rb"}]]
 
-      File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "OK"
-
-      @operations = [[:copy_range, "an_added_file.rb", "Not OK"]]
+      file = double(:file)
+      file.should_receive(:write).with("Not OK")
+      File.should_receive(:open).with("an_added_file.rb", "w").and_yield(file)
 
       rollback
-
-      File.read("spec/fixtures/ruby_app/an_added_file.rb").should == "Not OK"
-
-      FileUtils.rm("spec/fixtures/ruby_app/an_added_file.rb")
     end
 
     it "runs the rollback command when the operation is run_command and we have a rollback command" do
-      @operations = [[:run_command, "ls"]]
+      @operations = [[:run_command, { :rollback_command => "ls"}]]
 
-      self.should_receive(:spawn).with("ls")
-      Process.stub!(:wait)
+      Dir.should_receive(:chdir).with("spec/fixtures/ruby_app").and_yield
+
+      output = ""
+
+      io = double(:io)
+      io.should_receive(:read) do
+        ""
+      end
+
+      IO.should_receive(:popen).with("ls").and_yield(io)
+      $?.should_receive(:exitstatus).and_return(0)
 
       rollback
     end
 
     it "runs the rollback command when the operation is override_file" do
-      begin
-        FileUtils.cp("spec/fixtures/ruby_app/README", "/tmp/README")
-        FileUtils.rm("spec/fixtures/ruby_app/README")
+      @operations = [[:override_file, { :tmp_file => "/tmp/reciper/my_file.rb", :overriden_file => "ola.rb"}]]
 
-        File.exists?("spec/fixtures/ruby_app/README").should_not be
+      FileUtils.should_receive(:cp).with("/tmp/reciper/my_file.rb", "spec/fixtures/ruby_app/ola.rb")
 
-        @operations = [[:override_file, "/tmp/README", "README"]]
-
-        rollback
-
-        File.exists?("spec/fixtures/ruby_app/README").should be
-      ensure
-        FileUtils.cp("/tmp/README", "spec/fixtures/ruby_app/README") unless File.exists?("spec/fixtures/ruby_app/README")
-      end
+      rollback
     end
   end
 end

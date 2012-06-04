@@ -22,7 +22,7 @@ module Reciper
 
       FileUtils.cp(File.join(@recipe_path, filename), global_destination)
 
-      @operations << [:copy, { :destination => destination }]
+      @operations << [:copy_file, { :destination => destination }]
     end
 
     def run_tests(options={})
@@ -61,18 +61,18 @@ module Reciper
 
     def rollback
       @operations.reverse.each do |operation|
-        if operation[0] == :copy
-          FileUtils.rm(@ruby_app_path + "/" + operation[1])
+        if operation[0] == :copy_file
+          remove_file(operation[1][:destination])
         elsif operation[0] == :copy_range
-          File.open(@ruby_app_path + "/" + operation[1], "w") { |file| file.write(operation[2]) }
+          File.open(operation[1][:original_file], "w") do |file|
+            file.write(operation[1][:original_content])
+          end
         elsif operation[0] == :run_command
-          run_on_app_path do
-            spawn(operation[1]) if operation[1]
-
-            Process.wait
+          if operation[1][:rollback_command]
+            run_command(operation[1][:rollback_command])
           end
         elsif operation[0] == :override_file
-          FileUtils.cp(operation[1], @ruby_app_path + "/" + operation[2])
+          FileUtils.cp(operation[1][:tmp_file], File.join(@ruby_app_path, operation[1][:overriden_file]))
         end
       end
     end
@@ -128,6 +128,12 @@ module Reciper
     def run_on_app_path
       Dir.chdir(@ruby_app_path) do
         yield
+      end
+    end
+
+    def remove_file(file)
+      run_on_app_path do
+        FileUtils.rm(file)
       end
     end
   end
