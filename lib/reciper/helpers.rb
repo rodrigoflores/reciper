@@ -61,18 +61,20 @@ module Reciper
 
     def rollback
       @operations.reverse.each do |operation|
-        if operation[0] == :copy_file
-          remove_file(operation[1][:destination])
-        elsif operation[0] == :copy_range
-          File.open(operation[1][:original_file], "w") do |file|
-            file.write(operation[1][:original_content])
+        operation_name, arguments = operation
+
+        if operation_name == :copy_file
+          remove_file(arguments[:destination])
+        elsif operation_name == :copy_range
+          File.open(arguments[:original_file], "w") do |file|
+            file.write(arguments[:original_content])
           end
-        elsif operation[0] == :run_command
-          if operation[1][:rollback_command]
-            run_command(operation[1][:rollback_command])
+        elsif operation_name == :run_command
+          if arguments[:rollback_command]
+            run_command(arguments[:rollback_command])
           end
-        elsif operation[0] == :override_file
-          FileUtils.cp(operation[1][:tmp_file], File.join(@ruby_app_path, operation[1][:overriden_file]))
+        elsif operation_name == :override_file
+          FileUtils.cp(arguments[:tmp_file], File.join(@ruby_app_path, arguments[:overriden_file]))
         end
       end
     end
