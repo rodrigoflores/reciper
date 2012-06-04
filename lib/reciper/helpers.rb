@@ -11,7 +11,7 @@ module Reciper
   end
 
   module Helpers
-    # Copies the file from recipe to ruby_app. It adds an entry to the rollback
+    # Copies the file from recipe to ruby_app. It is reversible.
     #
     # filename - The file to be copied relative to the recipe_path
     # options - The hash options to configure the copy (default: {}):
@@ -38,7 +38,7 @@ module Reciper
       @operations << [:copy_file, { :destination => destination }]
     end
 
-    # Run the tests on the ruby app
+    # Run the tests on the ruby app. It is NOT reversible.
     #
     # Examples
     #
@@ -57,7 +57,7 @@ module Reciper
       end
     end
 
-    # Run a rake task on the ruby app
+    # Run a rake task on the ruby app. It is NOT reversible.
     #
     # task - the desired task
     #
@@ -92,6 +92,13 @@ module Reciper
       @operations << [:copy_line_range, { :original_content => original_content, :original_file => original_file }]
     end
 
+    # Does the rollback on all reversible operations.
+    #
+    # Examples
+    #
+    #  rollback
+    #
+    # Returns nothing
     def rollback
       @operations.reverse.each do |operation|
         operation_name, arguments = operation
