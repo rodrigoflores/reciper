@@ -66,7 +66,7 @@ module Reciper
         elsif operation[0] == :copy_range
           File.open(@ruby_app_path + "/" + operation[1], "w") { |file| file.write(operation[2]) }
         elsif operation[0] == :run_command
-          Dir.chdir(@ruby_app_path) do
+          run_on_app_path do
             spawn(operation[1]) if operation[1]
 
             Process.wait
@@ -81,7 +81,7 @@ module Reciper
       response = ""
       successful = ""
 
-      Dir.chdir(@ruby_app_path) do
+      run_on_app_path do
         IO.popen(command) do |io|
           response = io.read
         end
@@ -98,7 +98,7 @@ module Reciper
     end
 
     def override_file(file, file_to_be_overriden)
-      Dir.chdir(@ruby_app_path) do
+      run_on_app_path do
         fail NoFileToBeOverriden unless File.exists?(file_to_be_overriden)
 
         FileUtils.mkdir_p("/tmp/reciper")
@@ -123,6 +123,12 @@ module Reciper
 
     def create_directory_if_not_exists(directory)
       FileUtils.mkdir_p(directory) unless File.directory?(directory)
+    end
+
+    def run_on_app_path
+      Dir.chdir(@ruby_app_path) do
+        yield
+      end
     end
   end
 end
