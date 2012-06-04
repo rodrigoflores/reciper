@@ -63,18 +63,15 @@ module Reciper
       @operations.reverse.each do |operation|
         operation_name, arguments = operation
 
-        if operation_name == :copy_file
-          remove_file(arguments[:destination])
-        elsif operation_name == :copy_range
-          File.open(arguments[:original_file], "w") do |file|
-            file.write(arguments[:original_content])
-          end
-        elsif operation_name == :run_command
-          if arguments[:rollback_command]
-            run_command(arguments[:rollback_command])
-          end
-        elsif operation_name == :override_file
-          FileUtils.cp(arguments[:tmp_file], File.join(@ruby_app_path, arguments[:overriden_file]))
+        case operation_name
+        when :copy_file
+          then remove_file(arguments[:destination])
+        when :copy_range
+          then write_content_to_file(arguments[:original_file], arguments[:original_content])
+        when :run_command
+          then run_command(arguments[:rollback_command]) if arguments[:rollback_command]
+        when :override_file
+          then FileUtils.cp(arguments[:tmp_file], File.join(@ruby_app_path, arguments[:overriden_file]))
         end
       end
     end
@@ -136,6 +133,12 @@ module Reciper
     def remove_file(file)
       run_on_app_path do
         FileUtils.rm(file)
+      end
+    end
+
+    def write_content_to_file(filename, content)
+      File.open(filename, "w") do |file|
+        file.write(content)
       end
     end
   end
