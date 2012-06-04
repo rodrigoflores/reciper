@@ -73,6 +73,21 @@ module Reciper
       run_command("bundle exec rake #{task}")
     end
 
+    # Copies a range of lines from a file on the recipe path to a file on the ruby app path. It is reversible.
+    #
+    # from - the file, relative to the recipe path, that contains the file with the lines that will be copied
+    # to - the file, relative to the ruby app path, that contains the file that will receive the files. You can also specify a suffix like *.rb and if it matches only one file, it will insert the lines to it, otherwise it will raise a NoFileOrMultipleFilesFound exception
+    # options - some options related to the line copy (default: {})
+    #         :to_line - The line where the content will be inserted (default: raises an exception)
+    #         :lines - A range that specifies the lines that will be copied (default: whole file (0..-1))
+    #
+    # Examples
+    #
+    #  copy_line_range("a.rb", "app/models/person.rb", :to_line => 42)
+    #  copy_line_range("a.rb", "app/models/person.rb", :to_line => 42, :lines => (4..10))
+    #  copy_line_range("a.rb", "db/migrate/*create_users.rb", :to_line => 10, :lines => (1..5))
+    #
+    # Returns nothing.
     def copy_line_range(from, to, options={})
       original_file = filename_from_suffix(to)
 
@@ -116,6 +131,21 @@ module Reciper
       end
     end
 
+    # Runs a command using bundle exec on the ruby app path. If you specify a rollback command, it is reversible.
+    #
+    #  command - the command. It will run inside a bundle exec.
+    #  rollback_command - the command which rollbacks the command (default: nil)
+    #
+    # Examples
+    #
+    #  run_command("ls")
+    #  # => { :successful => true, response => "file.rb\n\file2.rb" }
+    #  run_command("rails g model user", "rails d model user")
+    #  # => { :successful => true, response => "model was generated" }
+    #  run_command("cp a.rb b.rb")
+    #  # => { :successful => false, response => "file a.rb doesn't exists" }
+    #
+    # Returns a command execution hash
     def run_command(command, rollback_command=nil)
       response = ""
       successful = ""
@@ -136,6 +166,16 @@ module Reciper
       }
     end
 
+    # Overrides a file of the ruby app with a file from the recipe path. It is reversible.
+    #
+    #  file - The file that will override relative to the recipe path
+    #  file_to_be_overriden - The file that will be overriden
+    #
+    # Examples
+    #
+    #  override_file("a.rb", "app/controller/application_controller.rb")
+    #
+    # Returns nothing
     def override_file(file, file_to_be_overriden)
       run_on_app_path do
         fail NoFileToBeOverriden unless File.exists?(file_to_be_overriden)
