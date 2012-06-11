@@ -2,10 +2,12 @@ require "spec_helper"
 
 describe Reciper do
   describe "#initialize" do
-    it "assigns the paths" do
+    before do
       File.stub!(:directory?).and_return(false)
       FileUtils.stub!(:cp_r)
+    end
 
+    it "assigns the paths" do
       reciper = Reciper.new("Awesome recipe", "~/Code/source_path", "~/Code/rails_app")
 
       reciper.ruby_app_path.should == "./tmp/awesome_recipe"
@@ -18,14 +20,10 @@ describe Reciper do
 
       FileUtils.should_receive(:rm_rf).with("./tmp/awesome_recipe")
 
-      FileUtils.stub!(:cp_r)
-
       Reciper.new("Awesome recipe", "~/Code/source_path", "~/Code/rails_app")
     end
 
     it "creates the temp directory" do
-      File.stub!(:directory?).and_return(false)
-
       FileUtils.should_receive(:cp_r).with("~/Code/rails_app", "./tmp/awesome_recipe")
 
       Reciper.new("Awesome recipe", "~/Code/source_path", "~/Code/rails_app")
@@ -33,6 +31,8 @@ describe Reciper do
   end
 
   describe "#execute" do
-    it "run an instance eval"
+    it "run an instance eval" do
+      pending
+    end
   end
 end
