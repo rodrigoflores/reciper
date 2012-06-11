@@ -1,6 +1,6 @@
 require "fileutils"
 
-module Reciper
+class Reciper
   class NoTestOutput < RuntimeError
   end
 
