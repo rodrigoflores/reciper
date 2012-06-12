@@ -3,7 +3,6 @@ source 'https://rubygems.org'
 gem 'rspec'
 gem 'rake'
 
-require 'yard'
 gem 'yard'
 gem 'redcarpet'
 
