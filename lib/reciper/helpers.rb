@@ -11,10 +11,10 @@ class Reciper
   end
 
   module Helpers
-    # Copies the file from recipe to ruby_app. It is reversible.
+    # Copies the file from recipe to ruby_app.
     #
-    # filename - The file to be copied relative to the recipe_path
-    # options - The hash options to configure the copy (default: {}):
+    #  filename - The file to be copied relative to the recipe_path
+    #  options - The hash options to configure the copy (default: {}):
     #         :as - The copy name (default: the file name).
     #         :to - The destination dir relative to the ruby_app_path. If the directory doesn't exists, it will be created (default: ruby_app_path root path).
     #
@@ -36,7 +36,7 @@ class Reciper
       FileUtils.cp(File.join(@recipe_path, filename), global_destination)
     end
 
-    # Run the tests on the ruby app. It is NOT reversible.
+    # Run the tests on the ruby app.
     #
     # Examples
     #
@@ -55,9 +55,9 @@ class Reciper
       end
     end
 
-    # Run a rake task on the ruby app. It is NOT reversible.
+    # Run a rake task on the ruby app.
     #
-    # task - the desired task
+    #  task - the desired task
     #
     # Examples
     #
@@ -71,11 +71,11 @@ class Reciper
       run_command("bundle exec rake #{task}")
     end
 
-    # Copies a range of lines from a file on the recipe path to a file on the ruby app path. It is reversible.
+    # Copies a range of lines from a file on the recipe path to a file on the ruby app path.
     #
-    # from - the file, relative to the recipe path, that contains the file with the lines that will be copied
-    # to - the file, relative to the ruby app path, that contains the file that will receive the files. You can also specify a suffix like *.rb and if it matches only one file, it will insert the lines to it, otherwise it will raise a NoFileOrMultipleFilesFound exception
-    # options - some options related to the line copy (default: {})
+    #  from - the file, relative to the recipe path, that contains the file with the lines that will be copied
+    #  to - the file, relative to the ruby app path, that contains the file that will receive the files. You can also specify a suffix like *.rb and if it matches only one file, it will insert the lines to it, otherwise it will raise a NoFileOrMultipleFilesFound exception
+    #  options - some options related to the line copy (default: {})
     #         :to_line - The line where the content will be inserted (default: raises an exception)
     #         :lines - A range that specifies the lines that will be copied (default: whole file (0..-1))
     #
@@ -103,7 +103,7 @@ class Reciper
       end
     end
 
-    # Runs a command using bundle exec on the ruby app path. If you specify a rollback command, it is reversible.
+    # Runs a command using bundle exec on the ruby app path.
     #
     #  command - the command. It will run inside a bundle exec.
     #  rollback_command - the command which rollbacks the command (default: nil)
@@ -118,7 +118,7 @@ class Reciper
     #  # => { :successful => false, response => "file a.rb doesn't exists" }
     #
     # Returns a command execution hash
-    def run_command(command, rollback_command=nil)
+    def run_command(command)
       response = ""
       successful = ""
 
@@ -136,7 +136,7 @@ class Reciper
       }
     end
 
-    # Overrides a file of the ruby app with a file from the recipe path. It is reversible.
+    # Overrides a file of the ruby app with a file from the recipe path.
     #
     #  file - The file that will override relative to the recipe path
     #  file_to_be_overriden - The file that will be overriden
