@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    reciper (0.2.0)
+    reciper (0.2.1)
       activesupport (= 3.2.5)
 
 GEM
