@@ -4,6 +4,7 @@ describe Reciper::Helpers do
   before do
     File.stub!(:directory?).with("./tmp/a_random_recipe").and_return(false)
     FileUtils.stub!(:cp_r)
+    FileUtils.stub!(:mkdir_p).with("tmp")
   end
 
   let(:recipe) do

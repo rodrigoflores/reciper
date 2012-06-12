@@ -5,6 +5,7 @@ describe Reciper do
     before do
       File.stub!(:directory?).and_return(false)
       FileUtils.stub!(:cp_r)
+      FileUtils.stub!(:mkdir_p).with("tmp")
     end
 
     it "assigns the paths" do
@@ -25,6 +26,7 @@ describe Reciper do
 
     it "creates the temp directory" do
       FileUtils.should_receive(:cp_r).with("~/Code/rails_app", "./tmp/awesome_recipe")
+      FileUtils.should_receive(:mkdir_p).with("tmp")
 
       described_class.new("Awesome recipe", "~/Code/source_path", "~/Code/rails_app")
     end
@@ -34,6 +36,7 @@ describe Reciper do
     it "run an instance eval with all paths" do
       File.stub!(:directory?).and_return(false)
       FileUtils.stub!(:cp_r)
+      FileUtils.stub!(:mkdir_p).with("tmp")
 
       reciper = described_class.new("Awesome recipe", "~/Code/source_path", "~/Code/rails_app")
 

@@ -27,6 +27,8 @@ class Reciper
       FileUtils.rm_rf(@ruby_app_path)
     end
 
+    FileUtils.mkdir_p("tmp")
+
     FileUtils.cp_r(ruby_app_template_path, @ruby_app_path)
   end
 
