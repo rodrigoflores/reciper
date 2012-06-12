@@ -31,7 +31,7 @@ class Reciper
       destination = File.join(destination_dir , destination_file_name)
       global_destination = File.join(@ruby_app_path, destination)
 
-      create_directory_if_not_exists(File.join(@ruby_app_path, destination_dir))
+      create_directory_if_not_exists(File.join(@ruby_app_path, destination_dir)) unless options[:to].blank?
 
       FileUtils.cp(File.join(@recipe_path, filename), global_destination)
     end

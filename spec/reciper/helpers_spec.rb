@@ -4,15 +4,13 @@ describe Reciper::Helpers do
   before do
     File.stub!(:directory?).with("./tmp/a_random_recipe").and_return(false)
     FileUtils.stub!(:cp_r)
-
-    File.stub!(:directory?).with("./tmp/a_random_recipe/").and_return(true)
   end
 
   let(:recipe) do
     Reciper.new("a random recipe", "spec/fixtures/recipe", "spec/fixtures/ruby_app")
   end
 
-  describe "copy_file" do
+  describe ".copy_file" do
     it "copies the file from the recipe path to the ruby app root path " do
       FileUtils.should_receive(:cp).with("spec/fixtures/recipe/file.rb", "./tmp/a_random_recipe/file.rb")
 
