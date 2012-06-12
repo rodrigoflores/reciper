@@ -4,7 +4,7 @@ Suppose you're writing a book containing some programming recipes. It would be g
 
 Reciper is a collection of helpers that helps you write tests for your book recipes. It should be included on your described class and used whenever you need to copy files, copy line ranges, run tests, overwrite files, among other things.
 
-## Install
+## Installation
 
 On your `Gemfile`, just do this:
 
@@ -12,14 +12,14 @@ On your `Gemfile`, just do this:
 gem "reciper"
 ```
      
-Run `bundle install` and on your described class just include `Reciper::Helpers`
+Run `bundle install` and you're ready to go!
+
+## Usage
+
+Usage is really simple:
 
 ```ruby
-describe "My awesome recipe" do
-  include Reciper::Helpers
-  # (...)
+Recipe.new("My recipe name", "recipe_path/code", "ruby_app_template").execute do
+  copy_file("file.rb", :as => "user.rb", :to => "app/models")
 end
 ```
-
-        
-
