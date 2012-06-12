@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "reciper"
   gem.require_paths = ["lib"]
   gem.version       = Reciper::VERSION
+
+  gem.add_dependency("activesupport", "3.2.5")
 end
