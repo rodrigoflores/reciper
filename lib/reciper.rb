@@ -3,6 +3,7 @@ require "active_support/core_ext/string"
 
 class Reciper
   require "reciper/helpers"
+  include Reciper::Helpers
 
   attr_reader :name, :recipe_path, :ruby_app_path
 

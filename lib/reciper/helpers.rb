@@ -34,8 +34,6 @@ class Reciper
       create_directory_if_not_exists(File.join(@ruby_app_path, destination_dir))
 
       FileUtils.cp(File.join(@recipe_path, filename), global_destination)
-
-      @operations << [:copy_file, { :destination => destination }]
     end
 
     # Run the tests on the ruby app. It is NOT reversible.
@@ -103,32 +101,6 @@ class Reciper
       File.open(original_file, "w") do |file|
         file.write(original.flatten.join("\n"))
       end
-
-      @operations << [:copy_line_range, { :original_content => original_content, :original_file => original_file }]
-    end
-
-    # Does the rollback on all reversible operations.
-    #
-    # Examples
-    #
-    #  rollback
-    #
-    # Returns nothing
-    def rollback
-      @operations.reverse.each do |operation|
-        operation_name, arguments = operation
-
-        case operation_name
-        when :copy_file
-          then remove_file(arguments[:destination])
-        when :copy_range
-          then write_content_to_file(arguments[:original_file], arguments[:original_content])
-        when :run_command
-          then run_command(arguments[:rollback_command]) if arguments[:rollback_command]
-        when :override_file
-          then FileUtils.cp(arguments[:tmp_file], File.join(@ruby_app_path, arguments[:overriden_file]))
-        end
-      end
     end
 
     # Runs a command using bundle exec on the ruby app path. If you specify a rollback command, it is reversible.
@@ -158,8 +130,6 @@ class Reciper
         successful = ($?.exitstatus == 0)
       end
 
-      @operations << [:run_command, { :rollback_command => rollback_command }]
-
       {
         :successful => successful,
         :response => response
@@ -179,14 +149,6 @@ class Reciper
     def override_file(file, file_to_be_overriden)
       run_on_app_path do
         fail NoFileToBeOverriden unless File.exists?(file_to_be_overriden)
-
-        FileUtils.mkdir_p("/tmp/reciper")
-        filename = File.basename(file_to_be_overriden)
-        tmp_file = "/tmp/reciper/#{filename}"
-
-        FileUtils.cp(file_to_be_overriden, tmp_file)
-
-        @operations << [:override_file, { :tmp_file => tmp_file, :overriden_file => file_to_be_overriden }]
       end
 
       FileUtils.cp(File.join(@recipe_path,file), File.join(@ruby_app_path, file_to_be_overriden))
