@@ -7,6 +7,7 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = "--order rand -f d"
 end
 
+require 'yard'
 YARD::Rake::YardocTask.new do |t|
   t.files   = ['lib/**/*.rb']
 end
